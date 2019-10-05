@@ -3,8 +3,8 @@ const status = [
   'pend',
   'cancel',
   'ok',
-]
+];
 
 module.exports = {
-  status
-}
+  status,
+};
