@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const enumerator = require('../middleware/enumerator')
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
