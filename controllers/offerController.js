@@ -1,11 +1,11 @@
 /* eslint-disable consistent-return */
 
-const offer = require('../models/offer');
+const Offer = require('../models/offer');
 
 // Get offer object
 function getOffers(req, res) {
   // Finds all offers in the database
-  offer.find({}, (err, offers) => {
+  Offer.find({}, (err, offers) => {
     if (err) return res.status(500).send({ message: `Error on request: ${err}` });
     if (!offers) return res.status(404).send({ message: 'No offers found' });
 
@@ -27,20 +27,74 @@ function getOffer(req, res) {
   });
 }
 
+function getOfferPublisher(req, res){
+  const mypublisher = req.params.publisher;
+
+  if (!mypublisher) return res.status(400).send({ message: 'Missing params' });
+
+  // Finds the offer with the id provided
+  Offer.find({ publisher: mypublisher }, (err, offers) => {
+    if (err) return res.status(404).send({ message: `No offers found: ${err}` });
+
+    return res.status(200).send(offers);
+  });
+}
+
+function getClaimClaimant(req, res){
+  const myclaimant = req.params.claimant;
+
+  if (!myclaimant) return res.status(400).send({ message: 'Missing params' });
+
+  // Finds the offer with the id provided
+  Offer.find({ claimant: myclaimant }, (err, claims) => {
+    if (err) return res.status(404).send({ message: `No claims found: ${err}` });
+
+    return res.status(200).send(claims);
+  });
+}
+
 // Create and save a new offer
 function createOffer(req, res) {
-  const { photo } = req.body;
-  const { status } = req.body;
   const { description } = req.body;
-  const { location } = req.body;
+  const { coordinates } = req.body;
   const { labels } = req.body;
+  const { contains } = req.body;
+  const { servings } = req.body;
+  const { title } = req.body;
+  const { publisher } = req.body;
 
-  if (!photo || !status || !description || !location || !labels) {
+  const status = 'pub'
+  const photo = "https://www.deliciosi.com/images/100/119/sopa-de-champi%C3%B1ones.jpg";
+
+
+  if (!photo || !status || !description || !servings || !title) {
     return res.status(400).send({ message: 'Missing params' });
   }
 
+  const offer = new Offer({
+    photo,
+    status,
+    description,
+    coordinates,
+    labels,
+    contains,
+    servings,
+    title,
+    publisher
+  });
+
+  console.log(offer)
+
+  // Save the new offer
+  offer.save((err2, newOffer) => {
+    if (err2) return res.status(500).send({ message: `Error saving offer ${err2}` });
+    if (!newOffer) return res.status(500).send({ message: 'No offer to save' });
+
+    return res.status(200).send({ message: 'offer saved', newOffer });
+  });
+
   // Checks if the offer already exist
-  Offer.findOne({ email }, (err1, offerExist) => {
+  /*Offer.findOne({ email }, (err1, offerExist) => {
     if (err1) return res.status(500).send({ message: `Error finding offer ${err1}` });
     if (offerExist) return res.status(409).send({ message: 'Offer already exist' });
 
@@ -49,8 +103,9 @@ function createOffer(req, res) {
       photo,
       status,
       description,
-      location,
+      coordinates,
       labels,
+      contains
     });
 
     // Save the new offer
@@ -60,7 +115,7 @@ function createOffer(req, res) {
 
       return res.status(200).send({ message: 'offer saved', newOffer });
     });
-  });
+  });*/
 }
 
 // Replace the offer information
@@ -98,23 +153,23 @@ function replaceOffer(req, res) {
 
 // Update the offer information
 function editOffer(req, res) {
+  let offerId = req.params.offerId;
   const updatedFields = {};
 
   const { photo } = req.body;
   const { status } = req.body;
   const { description } = req.body;
-  const { location } = req.body;
   const { labels } = req.body;
+  const { claimant } = req.body;
 
-  // Get the new information
-  if (photo) updatedFields.email = req.body.photo;
-  if (status) updatedFields.password = req.body.status;
-  if (description) updatedFields.firstname = req.body.description;
-  if (location) updatedFields.surname = req.body.location;
-  if (labels) updatedFields.avatarImage = req.body.labels;
+  if (status) updatedFields.status = req.body.status;
+  if (claimant) updatedFields.claimant = req.body.claimant;
+  if (photo) updatedFields.photo = req.body.photo;
+  if (description) updatedFields.description = req.body.description;
+  if (labels) updatedFields.labels = req.body.labels;
 
   // Update the offer
-  offer.findByIdAndUpdate(offerId, updatedFields, (err) => {
+  Offer.findByIdAndUpdate(offerId, updatedFields, (err) => {
     if (err) return res.status(500).send({ message: `Error finding offer ${err}` });
 
     return res.status(200).send({ message: 'offer updated' });
@@ -127,4 +182,6 @@ module.exports = {
   createOffer,
   replaceOffer,
   editOffer,
+  getOfferPublisher,
+  getClaimClaimant
 };
